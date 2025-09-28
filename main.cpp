@@ -10,8 +10,11 @@ int main(void)
     v1.insert(v1.begin()+1,1);
     std::cout<<v1[1]<<std::endl;
     std::cout<<v1.at(1)<<std::endl;
-    v1.clear();
     std::cout<<"size : "<< v1.size()<<std::endl;
+    v1.erase(v1.begin()+1);
+    std::cout<<v1.size()<<std::endl;
+    v1.pop_back();
+    std::cout<<"size : "<<v1.size()<<std::endl;
 
 
 
