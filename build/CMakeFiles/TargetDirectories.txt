@@ -1,3 +1,0 @@
-/home/wj/Documents/opencv/build/CMakeFiles/opencv_practice.dir
-/home/wj/Documents/opencv/build/CMakeFiles/edit_cache.dir
-/home/wj/Documents/opencv/build/CMakeFiles/rebuild_cache.dir

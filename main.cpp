@@ -4,15 +4,20 @@
 
 int main(void)
 {
-    float data[] = {1,5,3,6,7,4,98,1,10};
+    int a=0, b=1;
 
-    cv::Mat m1(3,3,CV_32F, data);
-    std::cout<<m1<<std::endl<<std::endl;;
-
-    cv::Mat m2 = m1.t();
-    std::cout << m2 << std::endl;
-
-    std::cout<<m2.inv()<<std::endl;
+    try
+    {
+        if(a==0)
+        {
+            throw a;
+        }
+        std::cout<<"a = " << a <<std::endl;
+    }
+    catch(int e)
+    {
+        std::cout<<"a = 0입니다"<<std::endl;
+    }
 
 
 
