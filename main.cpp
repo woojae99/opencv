@@ -4,17 +4,15 @@
 
 int main(void)
 {
-    std::vector<double> v1;
-    v1.push_back(100);
-    v1.push_back(1000);
-    v1.insert(v1.begin()+1,1);
-    std::cout<<v1[1]<<std::endl;
-    std::cout<<v1.at(1)<<std::endl;
-    std::cout<<"size : "<< v1.size()<<std::endl;
-    v1.erase(v1.begin()+1);
-    std::cout<<v1.size()<<std::endl;
-    v1.pop_back();
-    std::cout<<"size : "<<v1.size()<<std::endl;
+    float data[] = {1,5,3,6,7,4,98,1,10};
+
+    cv::Mat m1(3,3,CV_32F, data);
+    std::cout<<m1<<std::endl<<std::endl;;
+
+    cv::Mat m2 = m1.t();
+    std::cout << m2 << std::endl;
+
+    std::cout<<m2.inv()<<std::endl;
 
 
 
