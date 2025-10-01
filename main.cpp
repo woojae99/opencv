@@ -9,6 +9,7 @@ int main(void)
 
     cv::namedWindow(name1, cv::WINDOW_NORMAL);
     cv::moveWindow(name1, 0, 0);
+    cv::resizeWindow(name1, 100,100);
 
     cv::imshow(name1, image1);
     cv::waitKey(0);
