@@ -4,21 +4,15 @@
 
 int main(void)
 {
-    int a=0, b=1;
+    cv::Mat image1(300, 400, CV_8U, cv::Scalar(150));
+    std::string name1 = "white";
 
-    try
-    {
-        if(a==0)
-        {
-            throw a;
-        }
-        std::cout<<"a = " << a <<std::endl;
-    }
-    catch(int e)
-    {
-        std::cout<<"a = 0입니다"<<std::endl;
-    }
+    cv::namedWindow(name1, cv::WINDOW_NORMAL);
+    cv::moveWindow(name1, 0, 0);
 
+    cv::imshow(name1, image1);
+    cv::waitKey(0);
+    cv::destroyAllWindows();
 
 
     return 0;
