@@ -11,8 +11,21 @@ int main(void)
     cv::moveWindow(name1, 0, 0);
     cv::resizeWindow(name1, 100,100);
 
-    cv::imshow(name1, image1);
-    cv::waitKey(0);
+    while(1)
+    {
+        cv::imshow(name1, image1);
+        int  key = cv::waitKey(1);
+
+        if(key == 27)
+        {
+            break;
+        }
+        else if(key == 'a')
+        {
+            std::cout<<"a = "<<key<<std::endl;
+        }
+    }
+
     cv::destroyAllWindows();
 
 
