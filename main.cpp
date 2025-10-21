@@ -3,19 +3,26 @@
 
 int main(void)
 {
-    std::string filename = "/home/wj/Pictures/icon.png";
+    std::string filename = "/home/wj/Videos/video.webm";
 
-    cv::Mat image = cv::imread(filename,cv::IMREAD_COLOR);
+    cv::VideoCapture video(filename);
 
-    cv::Vec3b pixel = image.at<cv::Vec3b>(100,200);
-    std::cout<<(int)pixel[0]<<std::endl;
-    std::cout<<(int)pixel[1]<<std::endl;
-    std::cout<<(int)pixel[2]<<std::endl;
+    if (!video.isOpened()) {
+        std::cerr << "동영상 파일을 열 수 없습니다: " << filename << std::endl;
+        std::cerr << "FFmpeg 또는 코덱이 설치되어 있는지 확인하세요." << std::endl;
+        return -1;
+    }
 
-    image.at<cv::Vec3b>(5,5) = cv::Vec3b(0,0,255);
+    cv::Mat frame;
 
-    cv::imshow("image", image);
-    cv::waitKey(0);
+    while(1)
+    {
+        if(!video.read(frame)) break;
+
+        cv::imshow("test", frame);
+
+        if(cv::waitKey(100) == 27) break;
+    }
 
     return 0;
 }
