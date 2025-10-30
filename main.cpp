@@ -3,26 +3,21 @@
 
 int main(void)
 {
-    std::string filename = "/home/wj/Videos/video.webm";
+    std::string filename = "/home/wj/Pictures/icon.png";
+    
+    cv::Mat image = cv::imread(filename, cv::IMREAD_COLOR);
 
-    cv::VideoCapture video(filename);
+    std::vector<int> jpg, png;
 
-    if (!video.isOpened()) {
-        std::cerr << "동영상 파일을 열 수 없습니다: " << filename << std::endl;
-        std::cerr << "FFmpeg 또는 코덱이 설치되어 있는지 확인하세요." << std::endl;
-        return -1;
-    }
+    jpg.push_back(cv::IMWRITE_JPEG_QUALITY);
+    jpg.push_back(30);
+    png.push_back(cv::IMWRITE_JPEG_QUALITY);
+    png.push_back(100);
 
-    cv::Mat frame;
-
-    while(1)
-    {
-        if(!video.read(frame)) break;
-
-        cv::imshow("test", frame);
-
-        if(cv::waitKey(100) == 27) break;
-    }
+    cv::imwrite("test30.jpg",image,jpg);
+    cv::imwrite("test2100.jpg",image,png);
+    
+    
 
     return 0;
 }
