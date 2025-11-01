@@ -11,20 +11,22 @@ int main(void)
         return -1;
     }
 
-    // std::cout << cap.get(cv::CAP_PROP_FRAME_WIDTH) << std::endl;
-    // std::cout << cap.get(cv::CAP_PROP_FRAME_HEIGHT) << std::endl;
-    // std::cout << cap.get(cv::CAP_PROP_ZOOM) << std::endl;
-
-    cap.set(cv::CAP_PROP_BRIGHTNESS, 150);
-    cap.set(cv::CAP_PROP_AUTOFOCUS, 0);
-    cap.set(cv::CAP_PROP_ZOOM, 100);
-
     cv::Mat frame;
+
+    int fps = 10;
+    int delay = cvRound(1000 / fps);
+    int fourcc = cv::VideoWriter::fourcc('M', 'J', 'P', 'G');
+
+    cv::VideoWriter writer;
+    cv::Size size(
+        (int)cap.get(cv::CAP_PROP_FRAME_WIDTH),
+        (int)cap.get(cv::CAP_PROP_FRAME_HEIGHT));
+    writer.open("./test_video.avi", fourcc, fps, size);
 
     while (1)
     {
-        if (!cap.read(frame))
-            break;
+        cap >> frame;
+        writer << frame;
 
         cv::imshow("test", frame);
 
