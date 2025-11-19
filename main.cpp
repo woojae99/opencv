@@ -3,36 +3,21 @@
 
 int main(void)
 {
-    cv::VideoCapture cap(0);
+    std::string filename = "/home/wj/Pictures/icon.png";
 
-    if (!cap.isOpened())
-    {
-        std::cerr << "카메라 연결을 확인하세요. " << std::endl;
-        return -1;
-    }
+    cv::Mat image = cv::imread(filename,cv::IMREAD_COLOR);
 
-    cv::Mat frame;
+    cv::Vec3b pixel = image.at<cv::Vec3b>(100,200);
+    std::cout<<(int)pixel[0]<<std::endl;
+    std::cout<<(int)pixel[1]<<std::endl;
+    std::cout<<(int)pixel[2]<<std::endl;
 
-    int fps = 10;
-    int delay = cvRound(1000 / fps);
-    int fourcc = cv::VideoWriter::fourcc('M', 'J', 'P', 'G');
+    image.at<cv::Vec3b>(5,5) = cv::Vec3b(0,0,255);
+    image -= cv::Scalar(100, 0, 0);
+    image = image * 0.2;
 
-    cv::VideoWriter writer;
-    cv::Size size(
-        (int)cap.get(cv::CAP_PROP_FRAME_WIDTH),
-        (int)cap.get(cv::CAP_PROP_FRAME_HEIGHT));
-    writer.open("./test_video.avi", fourcc, fps, size);
-
-    while (1)
-    {
-        cap >> frame;
-        writer << frame;
-
-        cv::imshow("test", frame);
-
-        if (cv::waitKey(10) == 27)
-            break;
-    }
+    cv::imshow("image", image);
+    cv::waitKey(0);
 
     return 0;
 }
