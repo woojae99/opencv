@@ -1,24 +1,21 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <vector>
 
 int main(void)
 {
-    std::string filename = "/home/wj/Pictures/icon.png";
+    std::string filename = "/home/wj/Pictures/nature.jpeg";
 
-    cv::Mat image1 = cv::imread(filename, cv::IMREAD_COLOR);
+    cv::Mat image = cv::imread(filename, cv::IMREAD_COLOR);
+    cv::Mat bgr[3], result;
+    cv::split(image,bgr);
+    cv::merge(bgr,3, result);
 
-    cv::Mat axis_x, axis_y, repeat, trans;
-
-    cv::flip(image1, axis_x, 0);
-    cv::flip(image1, axis_y, 1);
-    cv::repeat(image1, 2, 1, repeat);
-    cv::transpose(image1,trans);
-
-    cv::imshow("show1", image1);
-    // cv::imshow("show2", axis_x);
-    // cv::imshow("show3", axis_y);
-    // cv::imshow("repeat",repeat);
-    cv::imshow("repeat",trans);
+    cv::imshow("show1", image);
+    cv::imshow("blue",bgr[0]);
+    cv::imshow("green",bgr[1]);
+    cv::imshow("red",bgr[2]);
+    cv::imshow("combine",result);
     cv::waitKey(0);
 
     return 0;
