@@ -4,19 +4,20 @@
 
 int main(void)
 {
-    std::string filename = "/home/wj/Pictures/nature.jpeg";
+    cv::Mat m1(3, 6, CV_8UC1, cv::Scalar(10));
+    cv::Mat m2(3, 6, CV_8UC1, cv::Scalar(60));
 
-    cv::Mat image = cv::imread(filename, cv::IMREAD_COLOR);
-    cv::Mat bgr[3], result;
-    cv::split(image,bgr);
-    cv::merge(bgr,3, result);
+    cv::Mat add1, add2, sub, div1, div2;
+    cv::Mat mask(m1.size(), CV_8UC1);
 
-    cv::imshow("show1", image);
-    cv::imshow("blue",bgr[0]);
-    cv::imshow("green",bgr[1]);
-    cv::imshow("red",bgr[2]);
-    cv::imshow("combine",result);
-    cv::waitKey(0);
+    cv::Rect rect(cv::Point(3, 0), cv::Size(3, 3));
+    mask(rect).setTo(1);
+
+    cv::add(m1, m2, add1);
+    cv::add(m1, m2, add2, mask);
+
+    std::cout << add1 << std::endl;
+    std::cout << add2 << std::endl;
 
     return 0;
 }
