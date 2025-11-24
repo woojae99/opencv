@@ -4,20 +4,19 @@
 
 int main(void)
 {
-    cv::Mat m1(3, 6, CV_8UC1, cv::Scalar(10));
-    cv::Mat m2(3, 6, CV_8UC1, cv::Scalar(60));
+    cv::Mat image1(300, 300, CV_8U, cv::Scalar(0));
+    cv::Mat image2(300, 300, CV_8U, cv::Scalar(0));
 
-    cv::Mat add1, add2, sub, div1, div2;
-    cv::Mat mask(m1.size(), CV_8UC1);
+    cv::Mat image3,image4,image5;
+    cv::Point middle = image1.size()/2;
+    cv::circle(image1,middle,100,cv::Scalar(255),-1);
+    cv::rectangle(image2,cv::Point(0,0),cv::Point(150,300),cv::Scalar(255),-1);
 
-    cv::Rect rect(cv::Point(3, 0), cv::Size(3, 3));
-    mask(rect).setTo(1);
-
-    cv::add(m1, m2, add1);
-    cv::add(m1, m2, add2, mask);
-
-    std::cout << add1 << std::endl;
-    std::cout << add2 << std::endl;
+    cv::bitwise_or(image1,image2,image3);
+    cv::bitwise_and(image1,image2,image4);
+    cv::imshow("image3",image3);
+    cv::imshow("image4",image4);
+    cv::waitKey(0);
 
     return 0;
 }
