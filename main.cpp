@@ -4,19 +4,35 @@
 
 int main(void)
 {
-    cv::Mat image1(300, 300, CV_8U, cv::Scalar(0));
-    cv::Mat image2(300, 300, CV_8U, cv::Scalar(0));
+    std::string filename1 = "/home/wj/Pictures/nature.jpeg";
+    std::string filename2 = "/home/wj/Pictures//icon.png";
 
-    cv::Mat image3,image4,image5;
-    cv::Point middle = image1.size()/2;
-    cv::circle(image1,middle,100,cv::Scalar(255),-1);
-    cv::rectangle(image2,cv::Point(0,0),cv::Point(150,300),cv::Scalar(255),-1);
+    cv::Mat image = cv::imread(filename1, cv::IMREAD_COLOR);
+    cv::Mat logo = cv::imread(filename2, cv::IMREAD_COLOR);
 
-    cv::bitwise_or(image1,image2,image3);
-    cv::bitwise_and(image1,image2,image4);
-    cv::imshow("image3",image3);
-    cv::imshow("image4",image4);
+    cv::Mat logo_th, masks[5], background, foreground, dst;
+    cv::threshold(logo,logo_th, 70, 255, cv::THRESH_BINARY);
+    cv::split(logo_th,masks);
+    
+    cv::bitwise_or(masks[0],masks[1],masks[3]);
+    cv::bitwise_or(masks[2],masks[3],masks[3]);
+    cv::bitwise_not(masks[3],masks[4]);
+
+    cv::Point center1 = image.size()/2;
+    cv::Point center2 = logo.size()/2;
+    cv::Point start = center1 - center2;
+    cv::Rect roi(start,logo.size());
+
+    cv::bitwise_and(logo,logo,foreground,masks[3]);
+    cv::bitwise_and(image(roi),image(roi),background,masks[4]);
+
+    cv::add(foreground, background,dst);
+    dst.copyTo(image(roi));
+
+    cv::imshow("image", dst);
+    cv::imshow("image2", image);
     cv::waitKey(0);
+    
 
     return 0;
 }
