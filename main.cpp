@@ -4,25 +4,21 @@
 
 int main(void)
 {
-    unsigned char data[] = {10,200,5,7,9,15,35,68,35,100,2,55,37,90, 1};
+    std::string filename = "/home/wj/Pictures/스크린샷/스크린샷 2025-12-08 00-04-47.png";
+    cv::Mat image_orin = cv::imread(filename, cv::IMREAD_COLOR);
+    cv::Mat image = image_orin.clone();
 
-    double minval, maxval;
-    int minidx[2], maxidx[2];
-    cv::Point minloc, maxloc;
+    double max, min;
+    cv::minMaxIdx(image, &min, &max);
 
-    cv::Mat m1(3,5,CV_8U,data);
-    cv::Mat m2 (3,5,CV_8U,cv::Scalar(50));
-    cv::Mat m_min, m_max;
+    double ratio = (max - min) / 255.0;
+    cv::Mat result = (image - min) / ratio;
 
-    cv::min(m1,m2,m_min);
-    cv::max(m1,m2,m_max);
+    std::cout<<min<<","<<max<<std::endl;
 
-    cv::minMaxIdx(m1, &minval,&maxval,minidx,maxidx);
-    cv::minMaxLoc(m1,0,0,&minloc,&maxloc);
-    
-    std::cout<<minval<<","<<maxval<<std::endl;
-    std::cout<<minidx[1]<<","<<minidx[0]<<std::endl;
-    std::cout<<minloc<<","<<maxloc<<std::endl;
+    cv::imshow("result", result);
+    cv::imshow("raw", image_orin);
+    cv::waitKey(0);
 
     return 0;
 }
