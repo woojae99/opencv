@@ -4,21 +4,24 @@
 
 int main(void)
 {
-    std::string filename = "/home/wj/Pictures/스크린샷/스크린샷 2025-12-08 00-04-47.png";
-    cv::Mat image_orin = cv::imread(filename, cv::IMREAD_COLOR);
-    cv::Mat image = image_orin.clone();
+    cv::Mat m1 = cv::Mat::ones(3, 3, CV_32F) * 3;
+    m1.at<float>(0, 1) = 1;
 
-    double max, min;
-    cv::minMaxIdx(image, &min, &max);
+    for (int i = 0; i < 3; i++)
+    {
+        for (int k = 0; k < 3; k++)
+        {
+            std::cout << m1.at<float>(i, k);
+            std::cout << ", ";
+        }
+        std::cout << std::endl;
+    }
 
-    double ratio = (max - min) / 255.0;
-    cv::Mat result = (image - min) / ratio;
-
-    std::cout<<min<<","<<max<<std::endl;
-
-    cv::imshow("result", result);
-    cv::imshow("raw", image_orin);
-    cv::waitKey(0);
+    cv::Mat m2 = cv::Mat::ones(3,3,CV_32F);
+    m2.at<float>(1,0) = 10;
+    float *ptr_m2 = m2.ptr<float>(1,0);
+    *(ptr_m2 + 1) = 11;
+    std::cout<<m2<<std::endl;
 
     return 0;
 }
