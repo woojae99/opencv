@@ -4,24 +4,19 @@
 
 int main(void)
 {
-    cv::Mat m1 = cv::Mat::ones(3, 3, CV_32F) * 3;
-    m1.at<float>(0, 1) = 1;
+    std::string filename1 = "/home/wj/Pictures/nature.jpeg";
+    std::string filename2 = "/home/wj/Pictures/icon.png";
+    cv::Mat image1 = cv::imread(filename1, cv::IMREAD_COLOR);
+    cv::Mat image2 = cv::imread(filename2, cv::IMREAD_COLOR);
 
-    for (int i = 0; i < 3; i++)
-    {
-        for (int k = 0; k < 3; k++)
-        {
-            std::cout << m1.at<float>(i, k);
-            std::cout << ", ";
-        }
-        std::cout << std::endl;
-    }
+    cv::Mat dst1, dst2;
+    cv::resize(image1, dst1, cv::Size(255, 255));
+    cv::resize(image2, dst2, cv::Size(255, 255));
 
-    cv::Mat m2 = cv::Mat::ones(3,3,CV_32F);
-    m2.at<float>(1,0) = 10;
-    float *ptr_m2 = m2.ptr<float>(1,0);
-    *(ptr_m2 + 1) = 11;
-    std::cout<<m2<<std::endl;
+    cv::Mat result1 = dst1*0.5 + dst2*0.5;
+
+    cv::imshow("result",result1);
+    cv::waitKey(0);
 
     return 0;
 }
