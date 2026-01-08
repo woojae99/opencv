@@ -12,7 +12,7 @@ int main(void)
         return 1;
     }
 
-    float data[] = {1.0f / 9, 1.0f / 9, 1.0f / 9, 1.0f / 9, 1.0f / 9, 1.0f / 9, 1.0f / 9, 1.0f / 9, 1.0f / 9};
+    float data[] = {0,-1,0,-1.0,5.0,-1.0,0,-1.0,0};
     cv::Mat mask(3, 3, CV_32F, data);
     cv::Mat blur(image1.size(), CV_8UC3, cv::Scalar(0,0,0));
     cv::Point m_h = mask.size() / 2;
@@ -21,7 +21,7 @@ int main(void)
     {
         for (int j = m_h.x; j < image1.cols; j++)
         {
-            cv::Vec3b sum;
+            cv::Vec3f sum(0.f, 0.f, 0.f);
             for (int u = 0; u < mask.rows; u++)
             {
                 for (int v = 0; v < mask.cols; v++)
@@ -35,7 +35,10 @@ int main(void)
                     sum[2] += w * (float)tmp[2];
                 }
             }
-            blur.at<cv::Vec3b>(i, j) = cv::Vec3b((uchar)sum[0],(uchar)sum[1],(uchar)sum[2]);
+            blur.at<cv::Vec3b>(i, j) = cv::Vec3b(
+            cv::saturate_cast<uchar>(sum[0]),
+            cv::saturate_cast<uchar>(sum[1]),
+            cv::saturate_cast<uchar>(sum[2]));
         }
     }
 
