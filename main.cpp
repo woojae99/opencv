@@ -5,45 +5,41 @@
 int main(void)
 {
     std::string filename1 = "/home/wj/Pictures/nature.jpeg";
-    cv::Mat image1 = cv::imread(filename1, 1);
+    cv::Mat image1 = cv::imread(filename1, 0);
 
     if (image1.empty())
     {
         return 1;
     }
 
-    float data[] = {0,-1,0,-1.0,5.0,-1.0,0,-1.0,0};
-    cv::Mat mask(3, 3, CV_32F, data);
-    cv::Mat blur(image1.size(), CV_8UC3, cv::Scalar(0,0,0));
-    cv::Point m_h = mask.size() / 2;
+    cv::Mat edge;
+    cv::Mat dst = cv::Mat(image1.size(), CV_8U, cv::Scalar(0));
+    cv::Point mid(3 / 2, 3 / 2);
 
-    for (int i = m_h.y; i < image1.rows; i++)
+    for (int i = mid.y; i < image1.rows - mid.y; i++)
     {
-        for (int j = m_h.x; j < image1.cols; j++)
+        for (int k = mid.x; k < image1.cols - mid.x; k++)
         {
-            cv::Vec3f sum(0.f, 0.f, 0.f);
-            for (int u = 0; u < mask.rows; u++)
+            float max = 0;
+            for (int u = 0; u < 3; u++)
             {
-                for (int v = 0; v < mask.cols; v++)
+                for (int v = 0; v < 3; v++)
                 {
-                    int y = i + u - m_h.y;
-                    int x = j + v - m_h.x;
-                    float w = mask.at<float>(u,v);
-                    cv::Vec3b tmp = image1.at<cv::Vec3b>(y, x);
-                    sum[0] += w * (float)tmp[0];
-                    sum[1] += w * (float)tmp[1];
-                    sum[2] += w * (float)tmp[2];
+                    int y = i + u - mid.y;
+                    int x = k + v - mid.x;
+                    float diff = abs(image1.at<uchar>(i, k) - image1.at<uchar>(y, x));
+                    if (diff > max)
+                    {
+                        max = diff;
+                    }
                 }
             }
-            blur.at<cv::Vec3b>(i, j) = cv::Vec3b(
-            cv::saturate_cast<uchar>(sum[0]),
-            cv::saturate_cast<uchar>(sum[1]),
-            cv::saturate_cast<uchar>(sum[2]));
+            dst.at<uchar>(i, k) = max;
         }
     }
 
     cv::imshow("raw", image1);
-    cv::imshow("blur", blur);
+    cv::imshow("result", dst);
     cv::waitKey(0);
 
     return 0;
