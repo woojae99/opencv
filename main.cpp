@@ -2,45 +2,35 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
 
+float data1[] = {-1, 0, 1, -1, 0, 1, -1, 0, 1};
+float data2[] = {1, 1, 1, 0, 0, 0, -1, -1, -1};
+// float data2[] = {-1, -1, -1, 0, 0, 0, 1, 1, 1};
+
 int main(void)
 {
     std::string filename1 = "/home/wj/Pictures/nature.jpeg";
-    cv::Mat image1 = cv::imread(filename1, 0);
+    cv::Mat image = cv::imread(filename1, 0);
+    cv::Mat dst, dst1, dst2, mask1(3, 3, CV_32F, data1), mask2(3, 3, CV_32F, data2);
 
-    if (image1.empty())
+    if (image.empty())
     {
         return 1;
     }
 
-    cv::Mat edge;
-    cv::Mat dst = cv::Mat(image1.size(), CV_8U, cv::Scalar(0));
-    cv::Point mid(3 / 2, 3 / 2);
+    cv::filter2D(image,dst1,CV_32F,mask1);
+    cv::filter2D(image,dst2,CV_32F,mask2);
+    cv::magnitude(dst1,dst2,dst);
+    dst.convertTo(dst,CV_8U);
+    dst1.convertTo(dst1,CV_8U);
+    dst2.convertTo(dst2,CV_8U);
 
-    for (int i = mid.y; i < image1.rows - mid.y; i++)
-    {
-        for (int k = mid.x; k < image1.cols - mid.x; k++)
-        {
-            float max = 0;
-            for (int u = 0; u < 3; u++)
-            {
-                for (int v = 0; v < 3; v++)
-                {
-                    int y = i + u - mid.y;
-                    int x = k + v - mid.x;
-                    float diff = abs(image1.at<uchar>(i, k) - image1.at<uchar>(y, x));
-                    if (diff > max)
-                    {
-                        max = diff;
-                    }
-                }
-            }
-            dst.at<uchar>(i, k) = max;
-        }
-    }
-
-    cv::imshow("raw", image1);
-    cv::imshow("result", dst);
+    cv::imshow("raw",image);
+    cv::imshow("result",dst);
+    cv::imshow("result_x",dst1);
+    cv::imshow("result_y",dst2);
     cv::waitKey(0);
+    
+    
 
     return 0;
 }
