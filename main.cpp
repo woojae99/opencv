@@ -22,7 +22,7 @@ bool check_match(cv::Mat img, cv::Point start, cv::Mat mask, int mode = 0)
     return true;
 }
 
-void erosion(cv::Mat img, cv::Mat& dst, cv::Mat mask)
+void dliation(cv::Mat img, cv::Mat& dst, cv::Mat mask)
 {
     dst = cv::Mat(img.size(), CV_8U, cv::Scalar(0));
 
@@ -32,8 +32,8 @@ void erosion(cv::Mat img, cv::Mat& dst, cv::Mat mask)
         for(int k = mid.x; k<img.cols - mid.x;k++)
         {
             cv::Point start = cv::Point(k,i) - mid;
-            bool check = check_match(img,start,mask,0);
-            dst.at<uchar>(i,k) = (check) ? 255:0;
+            bool check = check_match(img,start,mask,1);
+            dst.at<uchar>(i,k) = (check) ? 0:255;
         }
     }
 }
@@ -51,10 +51,10 @@ int main(void)
 
     cv::threshold(raw_image,th_img,128,255,cv::THRESH_BINARY);
 
-    uchar data[] = {0,1,0,1,1,1,0,1,0};
+    uchar data[] = {0,1,0,1,1,1,0,1,1};
     cv::Mat mask(3,3,CV_8UC1,data);
 
-    erosion(th_img,dst1,(cv::Mat)mask);
+    dliation(th_img,dst1,(cv::Mat)mask);
 
     cv::imshow("raw", raw_image);
     cv::imshow("dst", dst1);
