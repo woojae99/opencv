@@ -2,32 +2,42 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
 
+void scaling(cv::Mat img, cv::Mat &dst, cv::Size size)
+{
+    dst = cv::Mat(size, img.type(), cv::Scalar(0));
+    double ratioy = (double)size.height / img.rows;
+    double ratiox = (double)size.width / img.cols;
+
+    for (int i = 0; i < img.rows; i++)
+    {
+        for (int k = 0; k < img.cols; k++)
+        {
+            int x = (int)(k*ratiox);
+            int y = (int)(i*ratioy);
+
+            dst.at<char>(y,x) = img.at<char>(i,k);
+        }
+    }
+}
+
 int main(void)
 {
     std::string filename1 = "/home/wj/Pictures/nature.jpeg";
     cv::Mat raw_image = cv::imread(filename1, 0);
-    cv::Mat th_img, open, close;
 
     if (raw_image.empty())
     {
         return 1;
     }
 
-    cv::threshold(raw_image, th_img, 128, 255, cv::THRESH_BINARY);
+    cv::Mat dst1, dst2;
+    scaling(raw_image,dst1,cv::Size(1000,700));
+    scaling(raw_image,dst2,cv::Size(500,250));
 
-    cv::Mat mask = (cv::Mat_<uchar>(3,3) <<
-    0,1,0,
-    1,1,1,
-    0,1,0
-);
-
-    cv::morphologyEx(th_img, open, cv::MORPH_OPEN, mask, cv::Point(-1, -1), 1);
-    cv::morphologyEx(th_img, close, cv::MORPH_CLOSE, mask, cv::Point(-1, -1), 1);
-
-    cv::imshow("raw", raw_image);
-    cv::imshow("open", open);
-    cv::imshow("close", close);
-    cv::waitKey(0);
+    cv::imshow("image",raw_image);
+    cv::imshow("dst1",dst1);
+    cv::imshow("dst2",dst2);
+    cv::waitKey(0);    
 
     return 0;
 }
