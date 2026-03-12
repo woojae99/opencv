@@ -2,20 +2,20 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
 
-void scaling(cv::Mat img, cv::Mat &dst, cv::Size size)
+void scaling_near(cv::Mat img, cv::Mat &dst, cv::Size size)
 {
     dst = cv::Mat(size, img.type(), cv::Scalar(0));
     double ratioy = (double)size.height / img.rows;
     double ratiox = (double)size.width / img.cols;
 
-    for (int i = 0; i < img.rows; i++)
+    for (int i = 0; i < dst.rows; i++)
     {
-        for (int k = 0; k < img.cols; k++)
+        for (int k = 0; k < dst.cols; k++)
         {
-            int x = (int)(k*ratiox);
-            int y = (int)(i*ratioy);
+            int x = (int)cvRound(k/ratiox);
+            int y = (int)cvRound(i/ratioy);
 
-            dst.at<char>(y,x) = img.at<char>(i,k);
+            dst.at<char>(i,k) = img.at<char>(y,x);
         }
     }
 }
@@ -30,13 +30,11 @@ int main(void)
         return 1;
     }
 
-    cv::Mat dst1, dst2;
-    scaling(raw_image,dst1,cv::Size(1000,700));
-    scaling(raw_image,dst2,cv::Size(500,250));
+    cv::Mat dst;
+    scaling_near(raw_image,dst,cv::Size(1000,700));
 
     cv::imshow("image",raw_image);
-    cv::imshow("dst1",dst1);
-    cv::imshow("dst2",dst2);
+    cv::imshow("dst",dst);
     cv::waitKey(0);    
 
     return 0;
