@@ -2,36 +2,21 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
 
-uchar bilinear_value(cv::Mat img, double x, double y)
+void tracs(cv::Mat img, cv::Mat &dst, cv::Point pt)
 {
-    cv::Point pt((int)x, (int)y);
-    int a = img.at<uchar>(pt);
-    int b = img.at<uchar>(pt + cv::Point(0, 1));
-    int c = img.at<uchar>(pt + cv::Point(1, 0));
-    int d = img.at<uchar>(pt + cv::Point(1, 1));
-
-    double alpha = y - pt.y;
-    double beta = x - pt.x;
-    int m1 = a + (int)cvRound(alpha*(b-a));
-    int m2 = c + (int)cvRound(alpha*(d-c));
-    int p = m1 + (int)cvRound(m2-m1);
-    return cv::saturate_cast<uchar>(p);
-}
-
-void bilinear(cv::Mat img, cv::Mat &dst, cv::Size size)
-{
-    dst = cv::Mat(size, img.type(), cv::Scalar(0));
-    double ratioy = (double)size.height / img.rows;
-    double ratiox = (double)size.width / img.cols;
+    cv::Rect rect(cv::Point(0, 0), img.size());
+    dst = cv::Mat(img.size(), img.type(), cv::Scalar(0));
 
     for (int i = 0; i < dst.rows; i++)
     {
-        for (int k = 0; k < dst.cols; k++)
+        for (int j = 0; j<dst.cols; j++)
         {
-            int x = (int)cvRound(k / ratiox);
-            int y = (int)cvRound(i / ratioy);
-
-            dst.at<char>(i, k) = bilinear_value(img, x, y);
+            cv::Point dst_pt(j, i);
+            cv::Point img_pt = dst_pt-pt;
+            if(rect.contains(img_pt))
+            {
+                dst.at<uchar>(dst_pt) = img.at<uchar>(img_pt);
+            }
         }
     }
 }
@@ -46,14 +31,11 @@ int main(void)
         return 1;
     }
 
-    cv::Mat dst,dst2;
-    bilinear(raw_image, dst, cv::Size(1000, 700));
+    cv::Mat dst;
+    tracs(raw_image,dst,cv::Point(30,100));
 
-    cv::resize(raw_image,dst2,cv::Size(1000,700),0,0,cv::INTER_NEAREST);
-
-    cv::imshow("image", raw_image);
-    cv::imshow("dst", dst);
-    cv::imshow("dst2",dst2);
+    cv::imshow("raw image", raw_image);
+    cv::imshow("dst",dst);
     cv::waitKey(0);
 
     return 0;
