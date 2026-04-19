@@ -2,41 +2,29 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
 
-void tracs(cv::Mat img, cv::Mat &dst, cv::Point pt)
-{
-    cv::Rect rect(cv::Point(0, 0), img.size());
-    dst = cv::Mat(img.size(), img.type(), cv::Scalar(0));
-
-    for (int i = 0; i < dst.rows; i++)
-    {
-        for (int j = 0; j<dst.cols; j++)
-        {
-            cv::Point dst_pt(j, i);
-            cv::Point img_pt = dst_pt-pt;
-            if(rect.contains(img_pt))
-            {
-                dst.at<uchar>(dst_pt) = img.at<uchar>(img_pt);
-            }
-        }
-    }
-}
-
 int main(void)
 {
     std::string filename1 = "/home/wj/Pictures/nature.jpeg";
-    cv::Mat raw_image = cv::imread(filename1, 0);
+    cv::Mat raw_image = cv::imread(filename1);
 
-    if (raw_image.empty())
+    if(raw_image.empty())
     {
-        return 1;
+        return 0;
     }
 
-    cv::Mat dst;
-    tracs(raw_image,dst,cv::Point(30,100));
+    cv::Point2f pt1[4] = {cv::Point2f(90,170),cv::Point2f(300,120),cv::Point2f(90,285),cv::Point2f(300,320)};
+    cv::Point2f pt2[4] = {cv::Point2f(60,120),cv::Point2f(340,110),cv::Point2f(60,280),cv::Point2f(340,280)};
 
-    cv::imshow("raw image", raw_image);
-    cv::imshow("dst",dst);
+    cv::Mat dst(raw_image.size(),CV_8U);
+    cv::Mat perspect_map = cv::getPerspectiveTransform(pt1,pt2);
+    cv::warpPerspective(raw_image,dst,perspect_map,raw_image.size(),cv::INTER_CUBIC);
+
+
+    
+
+
+    cv::imshow("raw", raw_image);
+    cv::imshow("result",dst);
     cv::waitKey(0);
-
     return 0;
 }
