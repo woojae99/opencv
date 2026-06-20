@@ -3,155 +3,99 @@
 #include <vector>
 #include <algorithm>
 
-void hough_coord(cv::Mat image, cv::Mat &acc_mat, double rho, double theta);
-void acc_mask(cv::Mat acc_mat, cv::Mat &acc_dst, cv::Size, int thresh);
-void thres_lines(cv::Mat acc_dst, cv::Mat &lines, double _rho, double theta, int thresh);
-void sort_lines(cv::Mat lines, std::vector<cv::Vec2f> &s_line);
-void houghLines(cv::Mat src, std::vector<cv::Vec2f> &s_lines, double rho, double theta, int thresh);
-void draw_houghLines(cv::Mat src, cv::Mat &dst, std::vector<cv::Vec2f> lines, int nline);
+void cornerharris(cv::Mat image, cv::Mat &corner, int bSize, int ksize, float k);
+cv::Mat draw_corner(cv::Mat corner, cv::Mat image, int thresh);
+cv::Mat image, corner1, corner2;
+void cornerHarris_demo(int thresh, void *);
 
 int main(void)
 {
-    std::string filename1 = "/home/wj/Pictures/nature.jpeg";
-    cv::Mat raw_image = cv::imread(filename1, 0);
+    std::string filename1 = "/home/wj/Pictures/스크린샷 2026-06-20 23-42-57.png";
+    image = cv::imread(filename1, 1);
 
-    if (raw_image.empty())
+    if (image.empty())
     {
         return 0;
     }
 
-    double rho = 1, theta = CV_PI / 180;
-    cv::Mat canny, dst1, dst2;
-    cv::GaussianBlur(raw_image, canny, cv::Size(5, 5), 2, 2);
-    cv::Canny(canny, canny, 100, 150, 3);
+    int blocksize = 4;
+    int aperturesize = 3;
+    double k = 0.04;
+    int thresh = 5;
+    cv::Mat gray;
 
-    std::vector<cv::Vec2f> lines1, lines2;
-    houghLines(canny, lines1, rho, theta, 50);
-    HoughLines(canny, lines2, rho, theta, 50);
-    draw_houghLines(canny, dst1, lines1, 10);
-    draw_houghLines(canny, dst2, lines2, 10);
-    
+    cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
+    cornerharris(gray, corner1, blocksize, aperturesize, k);
+    cv::cornerHarris(gray, corner2, blocksize, aperturesize, k);
 
-    cv::imshow("raw", raw_image);
-    cv::imshow("my hough", dst1);
-    cv::imshow("opencv hough", dst2);
+    cv::namedWindow("image1");
+    cv::namedWindow("image2");
+
+    cornerHarris_demo(thresh, 0);
+    cv::createTrackbar("Threshold : ", "image1", &thresh, 100, cornerHarris_demo);
     cv::waitKey(0);
+
     return 0;
 }
 
-void hough_coord(cv::Mat image, cv::Mat &acc_mat, double rho, double theta)
+void cornerharris(cv::Mat image, cv::Mat &corner, int bSize, int ksize, float k)
 {
-    int acc_h = (image.rows + image.cols) * 2 / rho;
-    int acc_w = CV_PI / theta;
-    acc_mat = cv::Mat(acc_h, acc_w, CV_32S, cv::Scalar(0));
+    cv::Mat dx, dy, dxy, dx2, dy2;
+    corner = cv::Mat(image.size(), CV_32F, cv::Scalar(0));
 
-    for (int y = 0; y < image.rows; y++)
+    Sobel(image, dx, CV_32F, 1, 0, ksize);
+    Sobel(image, dy, CV_32F, 0, 1, ksize);
+    multiply(dx, dx, dx2);
+    multiply(dx, dy, dxy);
+    multiply(dy, dy, dy2);
+
+    cv::Size msize(5, 5);
+    cv::GaussianBlur(dx2, dx2, msize, 0);
+    cv::GaussianBlur(dy2, dy2, msize, 0);
+    cv::GaussianBlur(dxy, dxy, msize, 0);
+
+    for (int i = 0; i < image.rows; i++)
     {
-        for (int x = 0; x < image.cols; x++)
+        for (int j = 0; j < image.cols; j++)
         {
-            cv::Point pt(x, y);
-            if (image.at<uchar>(pt) > 0)
-            {
-                for (int i = 0; i < acc_w; i++)
-                {
-                    double radian = i * theta;
-                    double r = pt.x * cos(radian) + pt.y * sin(radian);
-                    r = cvRound(r / rho + acc_mat.rows / 2);
-                    acc_mat.at<int>(r, i)++;
-                }
-            }
+            float a = dx2.at<float>(i, j);
+            float b = dy2.at<float>(i, j);
+            float c = dxy.at<float>(i, j);
+
+            corner.at<float>(i, j) = (a * b - c * c) - k * (a + b) * (a + b);
         }
     }
 }
 
-void acc_mask(cv::Mat acc_mat, cv::Mat &acc_dst, cv::Size size, int thresh)
+cv::Mat draw_corner(cv::Mat corner, cv::Mat image, int thresh)
 {
-    acc_dst = cv::Mat(acc_mat.size(), CV_32S, cv::Scalar(0));
-    cv::Point h_m = size / 2;
+    int cnt = 0;
+    cv::Mat norm_corner;
+    normalize(corner, norm_corner, 0, 100, cv::NORM_MINMAX, CV_32FC1, cv::Mat());
 
-    for (int r = h_m.y; r < acc_mat.rows - h_m.y; r++)
+    for (int i = 1; i < norm_corner.rows - 1; i++)
     {
-        for (int t = h_m.x; t < acc_mat.cols - h_m.x; t++)
+        for (int j = 1; j < norm_corner.cols - 1; j++)
         {
-            cv::Point center(t, r);
-            int c_value = acc_mat.at<int>(center);
-            if (c_value >= thresh)
+            float cur = norm_corner.at<float>(i, j);
+            if (cur > thresh)
             {
-                double max = 0;
-                for (int u = 0; u < size.height; u++)
+                if (cur > norm_corner.at<float>(i - 1, j) && cur > norm_corner.at<float>(i + 1, j) && cur > norm_corner.at<float>(i, j - 1) && cur > norm_corner.at<float>(i, j + 1))
                 {
-                    for (int v = 0; v < size.width; v++)
-                    {
-                        cv::Point start = center + cv::Point(v, u) - h_m;
-                        if (start != center && acc_mat.at<int>(start) > max)
-                        {
-                            max = acc_mat.at<int>(start);
-                        }
-                    }
-                }
-
-                cv::Rect rect(center - h_m, size);
-                if (c_value >= max)
-                {
-                    acc_dst.at<int>(center) = c_value;
-                    acc_mat(rect).setTo(0);
+                    cv::circle(image, cv::Point(j, i), 2, cv::Scalar(255, 0, 0), -1);
+                    cnt++;
                 }
             }
         }
     }
+    std::cout << "코너 개수 : " << cnt << std::endl;
+    return image;
 }
 
-void thres_lines(cv::Mat acc_dst, cv::Mat &lines, double _rho, double theta, int thresh)
+void cornerHarris_demo(int thresh, void *)
 {
-    for (int r = 0; r < acc_dst.rows; r++)
-    {
-        for (int t = 0; t < acc_dst.cols; t++)
-        {
-            float value = (float)acc_dst.at<int>(r, t);
-            if (value >= thresh)
-            {
-                float rho = (float)((r - acc_dst.rows / 2) * _rho);
-                float radian = (float)(t * theta);
-
-                cv::Matx13f line(rho, radian, value);
-                lines.push_back((cv::Mat)line);
-            }
-        }
-    }
-}
-
-void sort_lines(cv::Mat lines, std::vector<cv::Vec2f> &s_line)
-{
-    cv::Mat acc = lines.col(2), idx;
-    sortIdx(acc, idx, cv::SORT_EVERY_COLUMN + cv::SORT_DESCENDING);
-
-    for (int i = 0; i < idx.rows; i++)
-    {
-        int id = idx.at<int>(i);
-        float rho = lines.at<float>(id, 0);
-        float radian = lines.at<float>(id, 1);
-        s_line.push_back(cv::Vec2f(rho, radian));
-    }
-}
-
-void houghLines(cv::Mat src, std::vector<cv::Vec2f> &s_lines, double rho, double theta, int thresh)
-{
-    cv::Mat acc_mat, acc_dat, lines;
-    hough_coord(src, acc_mat, rho, theta);
-    acc_mask(acc_mat, acc_dat, cv::Size(3, 7), thresh);
-    thres_lines(acc_dat, lines, rho, theta, thresh);
-    sort_lines(lines, s_lines);
-}
-
-void draw_houghLines(cv::Mat src, cv::Mat &dst, std::vector<cv::Vec2f> lines, int nline)
-{
-    cvtColor(src, dst, cv::COLOR_GRAY2BGR);
-    for (int i = 0; i < std::min((int)lines.size(), nline); i++)
-    {
-        float rho = lines[i][0], theta = lines[i][1];
-        double a = cos(theta), b = sin(theta);
-        cv::Point2d pt(a * rho, b * rho);
-        cv::Point2d delta(1000 * -b, 1000 * a);
-        line(dst,pt+delta,pt-delta,cv::Scalar(0,255,0),1,cv::LINE_AA);
-    }
+    cv::Mat img1 = draw_corner(corner1, image.clone(), thresh);
+    cv::Mat img2 = draw_corner(corner2, image.clone(), thresh);
+    cv::imshow("image1", img1);
+    cv::imshow("image2", img2);
 }
