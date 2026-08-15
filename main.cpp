@@ -2,100 +2,109 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include <algorithm>
+#include <filesystem>
 
-void cornerharris(cv::Mat image, cv::Mat &corner, int bSize, int ksize, float k);
-cv::Mat draw_corner(cv::Mat corner, cv::Mat image, int thresh);
-cv::Mat image, corner1, corner2;
-void cornerHarris_demo(int thresh, void *);
+namespace fs = std::filesystem;
+
+std::vector<cv::Point2f> findImageCorners(cv::Mat image, cv::Size boardSize);
+std::vector<cv::Point3f> calObjectCorners(cv::Size boardsize, float squaresize);
 
 int main(void)
 {
-    std::string filename1 = "/home/wj/Pictures/스크린샷 2026-06-20 23-42-57.png";
-    image = cv::imread(filename1, 1);
+    cv::Size board(10, 7), imageSize;
+    float squareSize = 2.85;
+
+    std::vector<std::string> files;
+
+    for (const auto &entry : fs::directory_iterator("/home/wj/Pictures/webcam"))
+    {
+        if (entry.is_regular_file())
+        {
+            files.push_back(entry.path().string());
+        }
+    }
+
+    std::vector<std::vector<cv::Point2f>> points_2d;
+    std::vector<std::vector<cv::Point3f>> points_3d;
+
+    for (int i = 0; i < files.size(); i++)
+    {
+        cv::Mat image = cv::imread(files[i], 1);
+
+        if (image.empty())
+        {
+            return 1;
+        }
+
+        std::vector<cv::Point2f> imgPoints = findImageCorners(image, board);
+
+        if (!imgPoints.empty())
+        {
+            points_2d.push_back(imgPoints);
+            std::vector<cv::Point3f> objPoint = calObjectCorners(board, squareSize);
+            points_3d.push_back(objPoint);
+        }
+    }
+
+    std::vector<cv::Mat> tvec, rvec;
+    cv::Mat cameraMatrix, distcoffs;
+    cv::Mat undistorted;
+
+    cv::Mat image = cv::imread("/home/wj/Pictures/webcam/2026-08-01-165055.jpg");
 
     if (image.empty())
     {
-        return 0;
+        return 1;
     }
 
-    int blocksize = 4;
-    int aperturesize = 3;
-    double k = 0.04;
-    int thresh = 5;
-    cv::Mat gray;
+    double rms = cv::calibrateCamera(points_3d, points_2d, image.size(), cameraMatrix, distcoffs, rvec, tvec);
+    cv::undistort(image,undistorted,cameraMatrix,distcoffs);
+    cv::imwrite("origin.jpg", image);
+    cv::imwrite("undistorted.jpg", undistorted);
+    std::cout<<"cameramatrix" <<std::endl<<cameraMatrix<<std::endl;
+    printf("rms error : %f\n",rms);
 
-    cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
-    cornerharris(gray, corner1, blocksize, aperturesize, k);
-    cv::cornerHarris(gray, corner2, blocksize, aperturesize, k);
-
-    cv::namedWindow("image1");
-    cv::namedWindow("image2");
-
-    cornerHarris_demo(thresh, 0);
-    cv::createTrackbar("Threshold : ", "image1", &thresh, 100, cornerHarris_demo);
+    cv::imshow("original",image);
+    cv::imshow("undistorted",undistorted);
     cv::waitKey(0);
+    
+
 
     return 0;
 }
 
-void cornerharris(cv::Mat image, cv::Mat &corner, int bSize, int ksize, float k)
+std::vector<cv::Point2f> findImageCorners(cv::Mat image, cv::Size boardSize)
 {
-    cv::Mat dx, dy, dxy, dx2, dy2;
-    corner = cv::Mat(image.size(), CV_32F, cv::Scalar(0));
+    static int cnt = 0;
+    std::vector<cv::Point2f> imgPoints;
+    cv::Mat gray;
 
-    Sobel(image, dx, CV_32F, 1, 0, ksize);
-    Sobel(image, dy, CV_32F, 0, 1, ksize);
-    multiply(dx, dx, dx2);
-    multiply(dx, dy, dxy);
-    multiply(dy, dy, dy2);
-
-    cv::Size msize(5, 5);
-    cv::GaussianBlur(dx2, dx2, msize, 0);
-    cv::GaussianBlur(dy2, dy2, msize, 0);
-    cv::GaussianBlur(dxy, dxy, msize, 0);
-
-    for (int i = 0; i < image.rows; i++)
+    cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
+    bool found = cv::findChessboardCorners(gray, boardSize, imgPoints);
+    if (found)
     {
-        for (int j = 0; j < image.cols; j++)
-        {
-            float a = dx2.at<float>(i, j);
-            float b = dy2.at<float>(i, j);
-            float c = dxy.at<float>(i, j);
-
-            corner.at<float>(i, j) = (a * b - c * c) - k * (a + b) * (a + b);
-        }
+        cv::cornerSubPix(gray, imgPoints, cv::Size(11, 11), cv::Size(-1, -1), cv::TermCriteria(cv::TermCriteria::MAX_ITER + cv::TermCriteria::EPS, 30, 0.001));
+        cv::drawChessboardCorners(image, boardSize, imgPoints, found);
+        cv::imshow("corner_image", image);
+        cv::waitKey();
+        cv::destroyWindow("corner_image");
     }
+
+    return imgPoints;
 }
 
-cv::Mat draw_corner(cv::Mat corner, cv::Mat image, int thresh)
+std::vector<cv::Point3f> calObjectCorners(cv::Size boardsize, float squaresize)
 {
-    int cnt = 0;
-    cv::Mat norm_corner;
-    normalize(corner, norm_corner, 0, 100, cv::NORM_MINMAX, CV_32FC1, cv::Mat());
-
-    for (int i = 1; i < norm_corner.rows - 1; i++)
+    std::vector<cv::Point3f> corners;
+    for (int i = 0; i < boardsize.height; i++)
     {
-        for (int j = 1; j < norm_corner.cols - 1; j++)
+        for (int k = 0; k < boardsize.width; k++)
         {
-            float cur = norm_corner.at<float>(i, j);
-            if (cur > thresh)
-            {
-                if (cur > norm_corner.at<float>(i - 1, j) && cur > norm_corner.at<float>(i + 1, j) && cur > norm_corner.at<float>(i, j - 1) && cur > norm_corner.at<float>(i, j + 1))
-                {
-                    cv::circle(image, cv::Point(j, i), 2, cv::Scalar(255, 0, 0), -1);
-                    cnt++;
-                }
-            }
+            float x = float(k * squaresize);
+            float y = float(i * squaresize);
+
+            corners.push_back(cv::Point3f(x, y, 0));
         }
     }
-    std::cout << "코너 개수 : " << cnt << std::endl;
-    return image;
-}
-
-void cornerHarris_demo(int thresh, void *)
-{
-    cv::Mat img1 = draw_corner(corner1, image.clone(), thresh);
-    cv::Mat img2 = draw_corner(corner2, image.clone(), thresh);
-    cv::imshow("image1", img1);
-    cv::imshow("image2", img2);
+    return corners;
 }
